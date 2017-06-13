@@ -1,8 +1,5 @@
 package com.a3louq.sci_tab;
 
-import android.util.Log;
-import android.widget.TextView;
-
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -16,16 +13,19 @@ import com.google.firebase.database.ValueEventListener;
 class DBConnection {
 
     private String dbValue;
+    private FirebaseDatabase database;
+    private DatabaseReference dbReference;
 
-    DBConnection(final String index) {
-        FirebaseDatabase database = FirebaseDatabase.getInstance();
-        DatabaseReference dbReference = database.getReference();
+    DBConnection() {
+        database = FirebaseDatabase.getInstance();
+        dbReference = database.getReference();
+    }
 
+    void dbValue(final String index) {
         dbReference.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 dbValue = (String) dataSnapshot.child(index).getValue();
-                Log.e("Value", dbValue);
             }
 
             @Override
