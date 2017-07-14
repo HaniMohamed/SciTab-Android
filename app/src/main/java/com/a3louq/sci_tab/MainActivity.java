@@ -1,17 +1,42 @@
 package com.a3louq.sci_tab;
 
+import android.animation.Animator;
+import android.graphics.drawable.ColorDrawable;
 import android.os.Build;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewAnimationUtils;
+import android.view.Window;
+import android.view.WindowManager;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
+
+    RelativeLayout details,load;
+    TextView selectedElement, nametxt, categorytxt, colortxt, electronPerShelltxt, phasetxt;
+
+    private DatabaseReference mDatabase;
+    String rw = "0";
+    ArrayList<Integer> reactionWith = new ArrayList<Integer>();
+
+    final TextView[] textViews= new TextView[118];
+
 
     List<Integer> allElements = Arrays.asList(R.id.e1,R.id.e2,R.id.e3,R.id.e4,R.id.e5,R.id.e6,R.id.e7,R.id.e8,R.id.e9,R.id.e10,
             R.id.e11,R.id.e12,R.id.e13,R.id.e14,R.id.e15,R.id.e16,R.id.e17,R.id.e18,R.id.e19,R.id.e20,
@@ -28,39 +53,175 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        requestWindowFeature(Window.FEATURE_NO_TITLE);
+        this.getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
+
         setContentView(R.layout.activity_main);
+        mDatabase = FirebaseDatabase.getInstance().getReference();
+
+        details = (RelativeLayout) findViewById(R.id.details);
+        load = (RelativeLayout) findViewById(R.id.load);
+        selectedElement = (TextView)findViewById(R.id.selctedElement);
+        nametxt = (TextView)findViewById(R.id.name);
+        categorytxt = (TextView)findViewById(R.id.category);
+        colortxt = (TextView)findViewById(R.id.color);
+        phasetxt = (TextView)findViewById(R.id.phase);
+        electronPerShelltxt = (TextView)findViewById(R.id.electrons);
+
+        for(int i=0; i<textViews.length;i++){
+            textViews[i]= (TextView) findViewById(allElements.get(i));
+        }
+
+        for(int i=0; i<allElements.size();i++){
+
+            final int finalI = i;
+            textViews[i].setOnLongClickListener(new View.OnLongClickListener() {
+                @Override
+                public boolean onLongClick(View v) {
+                    load.setVisibility(View.VISIBLE);
+
+                    getReactions(textViews[finalI]);
+                    return true;
+                }
+            });
+
+            final int finalI1 = i;
+            textViews[i].setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    ColorDrawable viewColor = (ColorDrawable) textViews[finalI1].getBackground();
+                    int colorId = viewColor.getColor();
+                    getDetails(textViews[finalI1],colorId);
+
+                }
+            });
 
 
+        }
 
 
 
     }
 
-    public void getDetails(View view) {
+    public void getReactions(TextView txt) {
+
+        final Animation pulse = AnimationUtils.loadAnimation(this, R.anim.pulse);
         setContentView(R.layout.activity_main);
-        TextView txt = (TextView) view ;
         final String symbol = txt.getText().toString().split("\n")[1];
         final int number = Integer.parseInt( txt.getText().toString().split("\n")[0]);
-        TextView txtView= (TextView) findViewById(allElements.get(number));
-        txtView.requestFocus();
 
 
-        List<Integer> reactionWith = Arrays.asList(5,11,31);
+        mDatabase.addValueEventListener(new ValueEventListener() {
+            TextView txtView= (TextView) findViewById(allElements.get(number));
 
-        a:
-        for(int i =0; i<allElements.size(); i++){
-            for (int j=0; j<reactionWith.size();j++){
-                if((i==reactionWith.get(j)-1)||(i==number-1)){
-                    continue a;
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                rw = dataSnapshot.child(symbol).child("Reaction with").getValue().toString();
+
+                if (rw.equals("0")){
+                    Toast.makeText(getApplicationContext(),"No elements can react with " + symbol,Toast.LENGTH_LONG).show();
+                }else if (rw.length()==1){
+                    reactionWith.add(Integer.parseInt(rw));
+                    a:
+                    for(int i =0; i<allElements.size(); i++){
+                        for (int j=0; j<reactionWith.size();j++) {
+                            if ((i == reactionWith.get(j) - 1)) {
+                                txtView = (TextView) findViewById(allElements.get(i));
+                                txtView.startAnimation(pulse);
+                                continue a;
+                            }else if (i==number-1){
+                                continue a;
+                            }
+                        }
+                        txtView= (TextView) findViewById(allElements.get(i));
+                        txtView.setBackgroundColor(getResources().getColor(R.color.numBack));
+                    }
+                }else {
+                    String[] RW = rw.split(",");
+
+                    for (int i=0;i<RW.length;i++){
+                        reactionWith.add(Integer.parseInt(RW[i]));
+                    }
+                    a:
+                    for(int i =0; i<allElements.size(); i++){
+                        for (int j=0; j<reactionWith.size();j++){
+                            if((i==reactionWith.get(j)-1)){
+                                txtView= (TextView) findViewById(allElements.get(i));
+                                txtView.startAnimation(pulse);
+                                continue a;
+                            }else if (i==number-1){
+                                continue a;
+                            }
+                        }
+                        txtView= (TextView) findViewById(allElements.get(i));
+                        txtView.setBackgroundColor(getResources().getColor(R.color.numBack));
+                    }
                 }
+                reactionWith.clear();
+
             }
-            txtView= (TextView) findViewById(allElements.get(i));
-            txtView.setBackgroundColor(getResources().getColor(R.color.numBack));
+            @Override
+            public void onCancelled(DatabaseError error) {
+
+            }
+        });
+
+//        Toast.makeText(getApplicationContext(),rw, Toast.LENGTH_SHORT).show();
+
+
+    }
+
+    public  void getDetails(TextView element, int colorID){
+        String symbol = element.getText().toString().split("\n")[1];
+
+
+        details.setVisibility(View.VISIBLE);
+        int cx = (details.getLeft() + details.getRight()) / 2;
+        int cy = details.getTop();
+        int finalRadius = Math.max(details.getWidth(), details.getHeight());
+
+        Animator anim = null;
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
+            anim = ViewAnimationUtils.createCircularReveal(details, cx, cy, 0, finalRadius);
         }
+        details.setBackgroundColor(colorID);
+        anim.setDuration(500);
+        anim.start();
+        selectedElement.setText(element.getText().toString());
+
+
+        String name=null, category=null, color=null, phase=null, electrons=null;
+        /*Get values from database here
+        .
+        .
+        .
+       */
+
+
+
+        nametxt.setText(name);
+        categorytxt.setText(category);
+        colortxt.setText(color);
+        phasetxt.setText(phase);
+        electronPerShelltxt.setText(electrons);
+
+
+
+
+
     }
 
     public void outSide(View view) {
         setContentView(R.layout.activity_main);
+        details.setVisibility(View.GONE);
+
     }
 
+    @Override
+    public void onBackPressed() {
+        setContentView(R.layout.activity_main);
+        details.setVisibility(View.GONE);
+
+    }
 }
