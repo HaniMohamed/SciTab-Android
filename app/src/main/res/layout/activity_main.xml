@@ -1618,7 +1618,7 @@
                 android:elevation="3dp"
                 android:gravity="center"
 
-                android:text="114\nFi"
+                android:text="114\nFl"
                 android:textSize="11dp"
                 android:textStyle="bold" />
 
@@ -2177,6 +2177,7 @@
         android:layout_marginLeft="65dp"
         android:visibility="gone"
         android:elevation="2dp"
+        android:clickable="true"
         android:layout_marginStart="65dp">
 
         <LinearLayout
@@ -2202,8 +2203,9 @@
                 android:id="@+id/name"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:gravity="center"
+                android:gravity="center_vertical"
                 android:textStyle="bold"
+                android:layout_marginLeft="5dp"
                 android:text="Name Of The Element"/>
         </LinearLayout>
 
@@ -2306,6 +2308,82 @@
 
     </RelativeLayout>
 
+    <RelativeLayout
+        android:id="@+id/intro"
+        android:visibility="gone"
+        android:clickable="true"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@android:color/black"
+            android:alpha="0.7"/>
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="@android:color/holo_green_light"
+            android:elevation="5dp"
+            android:padding="10dp"
+            android:textStyle="bold"
+            android:gravity="center"
+            android:textSize="18dp"
+            android:text="Welcome to the first launch"
+            android:id="@+id/textView" />
+
+
+        <ImageView
+            android:id="@+id/tab"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:src="@drawable/tab"
+            android:layout_marginLeft="90dp"
+            android:layout_marginStart="90dp"
+            android:layout_above="@+id/introText"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentStart="true" />
+
+        <TextView
+            android:id="@+id/introText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="@android:color/white"
+            android:textStyle="bold"
+            android:text="Tab on an Element to show its details"
+            android:layout_centerVertical="true"
+            android:gravity="center"
+            android:layout_toRightOf="@+id/tab"
+            android:layout_toEndOf="@+id/tab" />
+
+        <ImageView
+            android:id="@+id/arrow"
+            android:layout_width="wrap_content"
+            android:layout_height="50dp"
+            android:src="@drawable/arrow"
+            android:visibility="gone"
+            android:layout_marginRight="64dp"
+            android:layout_marginEnd="64dp"
+            android:layout_above="@+id/introText"
+            android:layout_alignRight="@+id/start"
+            android:layout_alignEnd="@+id/start" />
+
+
+
+
+        <Button
+            android:id="@+id/start"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true"
+            android:layout_marginRight="10dp"
+            android:layout_alignParentRight="true"
+            android:layout_marginBottom="10dp"
+            android:enabled="false"
+            android:text="next"/>
+
+
+    </RelativeLayout>
 
 
 </RelativeLayout>

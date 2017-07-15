@@ -2,9 +2,14 @@ package com.a3louq.sci_tab;
 
 import android.animation.Animator;
 import android.app.ProgressDialog;
+import android.content.DialogInterface;
+import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Build;
+import android.os.Handler;
+import android.preference.PreferenceManager;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.MotionEvent;
@@ -14,6 +19,8 @@ import android.view.Window;
 import android.view.WindowManager;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
+import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -28,17 +35,32 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import cn.pedant.SweetAlert.SweetAlertDialog;
+
 public class MainActivity extends AppCompatActivity {
 
+    ImageView tab, arrow;
+    Button start;
     Boolean longClicked=false;
-    RelativeLayout details;
-    TextView selectedElement, nametxt, categorytxt, colortxt, electronPerShelltxt, phasetxt;
+    RelativeLayout details, intro;
+    TextView introTxt,selectedElement, nametxt, categorytxt, colortxt, electronPerShelltxt, phasetxt;
 
     private DatabaseReference mDatabase;
     String rw = "0";
     ArrayList<Integer> reactionWith = new ArrayList<Integer>();
 
     final TextView[] textViews= new TextView[118];
+
+
+    int state = 0;
+    String[] eqTest = {"Reaction1","Reaction2","Reaction3","Reaction4","Reaction5"};
+    String[] eqDetails = {"Details1","Details2","Details3","Details4","Details5"};
+    String firstElement;
+    String secondElement;
+    String test;
+    String[] tests;
+    String eq;
+    String equationDetails;
 
 
     List<Integer> allElements = Arrays.asList(R.id.e1,R.id.e2,R.id.e3,R.id.e4,R.id.e5,R.id.e6,R.id.e7,R.id.e8,R.id.e9,R.id.e10,
@@ -63,7 +85,9 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         mDatabase = FirebaseDatabase.getInstance().getReference();
 
-     defElements();
+
+        defElements();
+
 
 
 
@@ -73,6 +97,11 @@ public class MainActivity extends AppCompatActivity {
 
 
         details = (RelativeLayout) findViewById(R.id.details);
+        intro = (RelativeLayout) findViewById(R.id.intro);
+        tab = (ImageView) findViewById(R.id.tab);
+        arrow = (ImageView) findViewById(R.id.arrow);
+        start = (Button) findViewById(R.id.start);
+        introTxt = (TextView)findViewById(R.id.introText);
         selectedElement = (TextView)findViewById(R.id.selctedElement);
         nametxt = (TextView)findViewById(R.id.name);
         categorytxt = (TextView)findViewById(R.id.category);
@@ -110,7 +139,42 @@ public class MainActivity extends AppCompatActivity {
 
                     ColorDrawable viewColor = (ColorDrawable) textViews[finalI1].getBackground();
                     int colorId = viewColor.getColor();
-                    getDetails(textViews[finalI1],colorId);
+                    if (state == 0) {
+                        getDetails(textViews[finalI1], colorId);
+                    }else if (state == 1){
+                        secondElement = textViews[finalI].getText().toString().split("\n")[1];
+
+
+                        for (int i=0;i<5;i++){
+                            final int finalI2 = i;
+                            mDatabase.addValueEventListener(new ValueEventListener() {
+                                @Override
+                                public void onDataChange(DataSnapshot dataSnapshot) {
+                                    test = dataSnapshot.child(firstElement).child(eqTest[finalI2]).getValue().toString();
+                                    if (test.length()>0) {
+                                        tests = test.split("\\+|→|1|2|3|4|5|6|7|8|9|0| |\\(");
+                                        for (int j=0;j<tests.length;j++){
+                                            System.out.println(tests[j] + " " + secondElement);
+                                            if ((secondElement.toLowerCase()).equals(tests[j].toLowerCase())){
+                                                eq = dataSnapshot.child(firstElement).child(eqTest[finalI2]).getValue().toString();
+                                                equationDetails = dataSnapshot.child(firstElement).child(eqDetails[finalI2]).getValue().toString();
+                                                react();
+                                                break;
+                                            }
+                                        }
+
+                                    }
+                                }
+
+                                @Override
+                                public void onCancelled(DatabaseError error) {
+                                }
+                            });
+
+
+
+                        }
+                    }
 
                 }
             });
@@ -119,15 +183,107 @@ public class MainActivity extends AppCompatActivity {
 
 
         }
+
+
+        final SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
+        boolean firstLaunch = preferences.getBoolean("firstLaunch", true);
+
+        if(firstLaunch){
+
+
+            intro.setVisibility(View.VISIBLE);
+            final Animation pulse = AnimationUtils.loadAnimation(this, R.anim.pulse);
+            tab.startAnimation(pulse);
+
+            Handler handler = new Handler();
+            handler.postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    TextView e22 = (TextView) findViewById(R.id.e22);
+                    ColorDrawable viewColor = (ColorDrawable) e22.getBackground();
+                    int colorId = viewColor.getColor();
+                    arrow.setVisibility(View.VISIBLE);
+                    getDetails(e22,colorId);
+
+                    start.setEnabled(true);
+                }
+            },5000);
+            start.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    if(start.getText().toString().equals("next")) {
+                        start.setText("Start");
+                        details.setVisibility(View.GONE);
+                        start.setEnabled(false);
+                        arrow.setVisibility(View.GONE);
+                        introTxt.setText("Long Tab on Element to show Elments which can react with");
+                        final Animation pulse = AnimationUtils.loadAnimation(getApplication(), R.anim.long_pulse);
+                        tab.startAnimation(pulse);
+                        Handler handler = new Handler();
+                        handler.postDelayed(new Runnable() {
+                            @Override
+                            public void run() {
+                                TextView e22 = (TextView) findViewById(R.id.e22);
+                                getReactions(e22);
+                                getReactions(e22);
+
+                                tab.setVisibility(View.GONE);
+                                introTxt.setText("Long Tab on Element to show Elments which can react with" +"\n"+"\n"+"Then you can tab on one of them to show the reaction equation");
+                                start.setEnabled(true);
+                            }
+                        }, 5000);
+                    }else {
+                        SharedPreferences.Editor editor = preferences.edit();
+                        editor.putBoolean("firstLaunch",false);
+                        editor.apply();
+
+                        setContentView(R.layout.activity_main);
+                        defElements();
+                    }
+                }
+            });
+
+
+
+        }
+
+
+
     }
+
+
+
+
+
+
+
+    public void react (){
+
+        new SweetAlertDialog(this)
+                .setTitleText("Reaction Equation")
+                .setContentText(eq + "\n" + equationDetails)
+                .show();
+
+        state = 0;
+    }
+
+
+
+
+
+
+
+
+
 
     public void getReactions(TextView txt) {
         final Animation pulse = AnimationUtils.loadAnimation(this, R.anim.pulse);
         final String symbol = txt.getText().toString().split("\n")[1];
         final int number = Integer.parseInt( txt.getText().toString().split("\n")[0]);
+        firstElement = txt.getText().toString().split("\n")[1];
 
 
-         final ProgressDialog Dialog = new ProgressDialog(MainActivity.this);
+        final ProgressDialog Dialog = new ProgressDialog(MainActivity.this);
         Dialog.setMessage("Loading...");
         Dialog.show();
         mDatabase.addValueEventListener(new ValueEventListener() {
@@ -139,6 +295,7 @@ public class MainActivity extends AppCompatActivity {
 
                 if (rw.equals("0")){
                     Toast.makeText(getApplicationContext(),"No elements can react with " + symbol,Toast.LENGTH_LONG).show();
+                    state = 0;
                 }else {
                     String[] RW = rw.split(",");
 
@@ -152,7 +309,8 @@ public class MainActivity extends AppCompatActivity {
                                 txtView= (TextView) findViewById(allElements.get(i));
                                 txtView.startAnimation(pulse);
                                 continue a;
-                            }else if (i==number-1){
+                            }
+                            else if (i==number-1){
                                 continue a;
                             }
                         }
@@ -171,13 +329,13 @@ public class MainActivity extends AppCompatActivity {
         });
 
 
-
+        state = 1;
 
     }
 
     public  void getDetails(TextView element, int colorID){
 
-        String symbol = element.getText().toString().split("\n")[1];
+        final String symbol = element.getText().toString().split("\n")[1];
 
 
         details.setVisibility(View.VISIBLE);
@@ -195,20 +353,39 @@ public class MainActivity extends AppCompatActivity {
         selectedElement.setText(element.getText().toString());
 
 
-        String name=null, category=null, color=null, phase=null, electrons=null;
-        /*Get values from database here
-        .
-        .
-        .
-       */
+        final String[] name = {null};
+        final String[] category = {null};
+        final String[] color={null};
+        final String[] phase={null};
+        final String[] electrons={null};
 
 
+        final ProgressDialog Dialog = new ProgressDialog(MainActivity.this);
+        Dialog.setMessage("Loading...");
+        Dialog.show();
+        mDatabase.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                name[0] =dataSnapshot.child(symbol).child("Name").getValue().toString();
+                category[0] =dataSnapshot.child(symbol).child("Category").getValue().toString();
+                color[0] =dataSnapshot.child(symbol).child("Color").getValue().toString();
+                phase[0] =dataSnapshot.child(symbol).child("Phase").getValue().toString();
+                electrons[0] =dataSnapshot.child(symbol).child("Electrons per shell").getValue().toString();
 
-        nametxt.setText(name);
-        categorytxt.setText(category);
-        colortxt.setText(color);
-        phasetxt.setText(phase);
-        electronPerShelltxt.setText(electrons);
+                nametxt.setText(name[0]);
+                categorytxt.setText(category[0]);
+                colortxt.setText(color[0]);
+                phasetxt.setText(phase[0]);
+                electronPerShelltxt.setText(electrons[0]);
+
+                Dialog.hide();
+            }
+
+            @Override
+            public void onCancelled(DatabaseError error) {
+            }
+        });
+
 
 
 
@@ -219,6 +396,7 @@ public class MainActivity extends AppCompatActivity {
     public void outSide(View view) {
         setContentView(R.layout.activity_main);
         defElements();
+        state =0;
 
         details.setVisibility(View.GONE);
 
@@ -228,6 +406,7 @@ public class MainActivity extends AppCompatActivity {
     public void onBackPressed() {
         setContentView(R.layout.activity_main);
         defElements();
+        state = 0;
 
         details.setVisibility(View.GONE);
 
