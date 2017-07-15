@@ -2,17 +2,13 @@ package com.a3louq.sci_tab;
 
 import android.animation.Animator;
 import android.app.ProgressDialog;
-import android.content.DialogInterface;
 import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
-import android.os.Build;
+import android.os.Bundle;
 import android.os.Handler;
 import android.preference.PreferenceManager;
-import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
-import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewAnimationUtils;
 import android.view.Window;
@@ -39,19 +35,15 @@ import cn.pedant.SweetAlert.SweetAlertDialog;
 
 public class MainActivity extends AppCompatActivity {
 
-    ImageView tab, arrow;
+    final TextView[] textViews = new TextView[118];
+    ImageView tab, tab2, arrow, arrow2;
     Button start;
     Boolean longClicked=false;
     RelativeLayout details, intro;
-    TextView introTxt,selectedElement, nametxt, categorytxt, colortxt, electronPerShelltxt, phasetxt;
-
-    private DatabaseReference mDatabase;
+    TextView introTxt, introTxt2, selectedElement, nametxt, categorytxt, colortxt, electronPerShelltxt, phasetxt;
+    boolean reactionGet = false;
     String rw = "0";
     ArrayList<Integer> reactionWith = new ArrayList<Integer>();
-
-    final TextView[] textViews= new TextView[118];
-
-
     int state = 0;
     String[] eqTest = {"Reaction1","Reaction2","Reaction3","Reaction4","Reaction5"};
     String[] eqDetails = {"Details1","Details2","Details3","Details4","Details5"};
@@ -61,8 +53,6 @@ public class MainActivity extends AppCompatActivity {
     String[] tests;
     String eq;
     String equationDetails;
-
-
     List<Integer> allElements = Arrays.asList(R.id.e1,R.id.e2,R.id.e3,R.id.e4,R.id.e5,R.id.e6,R.id.e7,R.id.e8,R.id.e9,R.id.e10,
             R.id.e11,R.id.e12,R.id.e13,R.id.e14,R.id.e15,R.id.e16,R.id.e17,R.id.e18,R.id.e19,R.id.e20,
             R.id.e21,R.id.e22,R.id.e23,R.id.e24,R.id.e25,R.id.e26,R.id.e27,R.id.e28,R.id.e29,R.id.e30,
@@ -75,6 +65,8 @@ public class MainActivity extends AppCompatActivity {
             R.id.e91,R.id.e92,R.id.e93,R.id.e94,R.id.e95,R.id.e96,R.id.e97,R.id.e98,R.id.e99,R.id.e100,
             R.id.e101,R.id.e102,R.id.e103,R.id.e104,R.id.e105,R.id.e106,R.id.e107,R.id.e108,R.id.e109,R.id.e110,
             R.id.e111,R.id.e112,R.id.e113,R.id.e114,R.id.e115,R.id.e116,R.id.e117,R.id.e118);
+    private DatabaseReference mDatabase;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -99,9 +91,12 @@ public class MainActivity extends AppCompatActivity {
         details = (RelativeLayout) findViewById(R.id.details);
         intro = (RelativeLayout) findViewById(R.id.intro);
         tab = (ImageView) findViewById(R.id.tab);
+        tab2 = (ImageView) findViewById(R.id.tab2);
         arrow = (ImageView) findViewById(R.id.arrow);
+        arrow2 = (ImageView) findViewById(R.id.arrow2);
         start = (Button) findViewById(R.id.start);
         introTxt = (TextView)findViewById(R.id.introText);
+        introTxt2 = (TextView) findViewById(R.id.introText2);
         selectedElement = (TextView)findViewById(R.id.selctedElement);
         nametxt = (TextView)findViewById(R.id.name);
         categorytxt = (TextView)findViewById(R.id.category);
@@ -208,30 +203,97 @@ public class MainActivity extends AppCompatActivity {
                     start.setEnabled(true);
                 }
             },5000);
+            final int[] step = {1};
+
             start.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
                     if(start.getText().toString().equals("next")) {
-                        start.setText("Start");
-                        details.setVisibility(View.GONE);
-                        start.setEnabled(false);
-                        arrow.setVisibility(View.GONE);
-                        introTxt.setText("Long Tab on Element to show Elments which can react with");
-                        final Animation pulse = AnimationUtils.loadAnimation(getApplication(), R.anim.long_pulse);
-                        tab.startAnimation(pulse);
-                        Handler handler = new Handler();
-                        handler.postDelayed(new Runnable() {
-                            @Override
-                            public void run() {
-                                TextView e22 = (TextView) findViewById(R.id.e22);
-                                getReactions(e22);
-                                getReactions(e22);
+                        if (step[0] == 1) {
+                            step[0]++;
+                            details.setVisibility(View.GONE);
+                            start.setEnabled(false);
+                            arrow.setVisibility(View.GONE);
+                            introTxt.setText("Long Tab on Element to show Elments which can react with");
+                            final Animation pulse = AnimationUtils.loadAnimation(getApplication(), R.anim.long_pulse);
+                            tab.startAnimation(pulse);
+                            Handler handler = new Handler();
+                            handler.postDelayed(new Runnable() {
+                                @Override
+                                public void run() {
+                                    final TextView e22 = (TextView) findViewById(R.id.e22);
+                                    getReactions(e22);
 
-                                tab.setVisibility(View.GONE);
-                                introTxt.setText("Long Tab on Element to show Elments which can react with" +"\n"+"\n"+"Then you can tab on one of them to show the reaction equation");
-                                start.setEnabled(true);
-                            }
-                        }, 5000);
+
+                                }
+                            }, 5000);
+                            start.setEnabled(true);
+                            tab.setVisibility(View.INVISIBLE);
+
+
+                        } else {
+                            start.setEnabled(false);
+
+                            start.setText("Start");
+
+                            tab.setVisibility(View.INVISIBLE);
+                            introTxt.setVisibility(View.INVISIBLE);
+                            tab2.setVisibility(View.VISIBLE);
+                            tab2.startAnimation(pulse);
+
+                            arrow2.setVisibility(View.VISIBLE);
+                            introTxt2.setVisibility(View.VISIBLE);
+
+                            Handler handler2 = new Handler();
+                            handler2.postDelayed(new Runnable() {
+                                @Override
+                                public void run() {
+                                    final TextView e22 = (TextView) findViewById(R.id.e22);
+
+                                    TextView e17 = (TextView) findViewById(R.id.e17);
+                                    firstElement = e22.getText().toString().split("\n")[1];
+
+                                    secondElement = e17.getText().toString().split("\n")[1];
+
+
+                                    for (int i = 0; i < 5; i++) {
+                                        final int finalI2 = i;
+                                        mDatabase.addValueEventListener(new ValueEventListener() {
+                                            @Override
+                                            public void onDataChange(DataSnapshot dataSnapshot) {
+                                                test = dataSnapshot.child(firstElement).child(eqTest[finalI2]).getValue().toString();
+                                                if (test.length() > 0) {
+                                                    tests = test.split("\\+|→|1|2|3|4|5|6|7|8|9|0| |\\(");
+                                                    for (int j = 0; j < tests.length; j++) {
+                                                        System.out.println(tests[j] + " " + secondElement);
+                                                        if ((secondElement.toLowerCase()).equals(tests[j].toLowerCase())) {
+                                                            eq = dataSnapshot.child(firstElement).child(eqTest[finalI2]).getValue().toString();
+                                                            equationDetails = dataSnapshot.child(firstElement).child(eqDetails[finalI2]).getValue().toString();
+                                                            react();
+                                                            break;
+                                                        }
+                                                    }
+
+                                                }
+                                            }
+
+                                            @Override
+                                            public void onCancelled(DatabaseError error) {
+                                            }
+                                        });
+
+
+                                    }
+
+
+                                    start.setEnabled(true);
+                                    state = 0;
+                                }
+                            }, 5000);
+                        }
+
+
+
                     }else {
                         SharedPreferences.Editor editor = preferences.edit();
                         editor.putBoolean("firstLaunch",false);
@@ -286,6 +348,8 @@ public class MainActivity extends AppCompatActivity {
         final ProgressDialog Dialog = new ProgressDialog(MainActivity.this);
         Dialog.setMessage("Loading...");
         Dialog.show();
+
+
         mDatabase.addValueEventListener(new ValueEventListener() {
             TextView txtView= (TextView) findViewById(allElements.get(number));
 
@@ -305,14 +369,24 @@ public class MainActivity extends AppCompatActivity {
                     a:
                     for(int i =0; i<allElements.size(); i++){
                         for (int j=0; j<reactionWith.size();j++){
+
                             if((i==reactionWith.get(j)-1)){
                                 txtView= (TextView) findViewById(allElements.get(i));
                                 txtView.startAnimation(pulse);
-                                continue a;
+                                if (i < 117) {
+                                    continue a;
+                                } else {
+                                    break a;
+                                }
                             }
                             else if (i==number-1){
-                                continue a;
+                                if (i < 117) {
+                                    continue a;
+                                } else {
+                                    break a;
+                                }
                             }
+
                         }
                         txtView= (TextView) findViewById(allElements.get(i));
                         txtView.setBackgroundColor(getResources().getColor(R.color.numBack));
@@ -321,6 +395,7 @@ public class MainActivity extends AppCompatActivity {
                 }
                 reactionWith.clear();
                 Dialog.hide();
+                reactionGet = true;
             }
             @Override
             public void onCancelled(DatabaseError error) {
