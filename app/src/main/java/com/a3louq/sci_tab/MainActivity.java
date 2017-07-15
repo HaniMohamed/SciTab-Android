@@ -349,9 +349,16 @@ public class MainActivity extends AppCompatActivity {
         Dialog.setMessage("Loading...");
         Dialog.show();
 
+        final TextView[] txtView = new TextView[1];
+
+        if (number == 118) {
+            txtView[0] = (TextView) findViewById(R.id.e118);
+        } else {
+            txtView[0] = (TextView) findViewById(allElements.get(number));
+        }
+
 
         mDatabase.addValueEventListener(new ValueEventListener() {
-            TextView txtView= (TextView) findViewById(allElements.get(number));
 
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
@@ -371,8 +378,8 @@ public class MainActivity extends AppCompatActivity {
                         for (int j=0; j<reactionWith.size();j++){
 
                             if((i==reactionWith.get(j)-1)){
-                                txtView= (TextView) findViewById(allElements.get(i));
-                                txtView.startAnimation(pulse);
+                                txtView[0] = (TextView) findViewById(allElements.get(i));
+                                txtView[0].startAnimation(pulse);
                                 if (i < 117) {
                                     continue a;
                                 } else {
@@ -388,9 +395,9 @@ public class MainActivity extends AppCompatActivity {
                             }
 
                         }
-                        txtView= (TextView) findViewById(allElements.get(i));
-                        txtView.setBackgroundColor(getResources().getColor(R.color.numBack));
-                        txtView.setTextColor(Color.GRAY);
+                        txtView[0] = (TextView) findViewById(allElements.get(i));
+                        txtView[0].setBackgroundColor(getResources().getColor(R.color.numBack));
+                        txtView[0].setTextColor(Color.GRAY);
                     }
                 }
                 reactionWith.clear();
