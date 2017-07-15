@@ -1,6 +1,8 @@
 package com.a3louq.sci_tab;
 
 import android.animation.Animator;
+import android.app.ProgressDialog;
+import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Build;
 import android.support.v7.app.AppCompatActivity;
@@ -28,7 +30,8 @@ import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
 
-    RelativeLayout details,load;
+    Boolean longClicked=false;
+    RelativeLayout details;
     TextView selectedElement, nametxt, categorytxt, colortxt, electronPerShelltxt, phasetxt;
 
     private DatabaseReference mDatabase;
@@ -60,8 +63,16 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         mDatabase = FirebaseDatabase.getInstance().getReference();
 
+     defElements();
+
+
+
+    }
+
+    public  void defElements(){
+
+
         details = (RelativeLayout) findViewById(R.id.details);
-        load = (RelativeLayout) findViewById(R.id.load);
         selectedElement = (TextView)findViewById(R.id.selctedElement);
         nametxt = (TextView)findViewById(R.id.name);
         categorytxt = (TextView)findViewById(R.id.category);
@@ -79,8 +90,9 @@ public class MainActivity extends AppCompatActivity {
             textViews[i].setOnLongClickListener(new View.OnLongClickListener() {
                 @Override
                 public boolean onLongClick(View v) {
-                    load.setVisibility(View.VISIBLE);
-
+                    longClicked=true;
+                    setContentView(R.layout.activity_main);
+                    defElements();
                     getReactions(textViews[finalI]);
                     return true;
                 }
@@ -90,6 +102,12 @@ public class MainActivity extends AppCompatActivity {
             textViews[i].setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
+                    if(longClicked) {
+                        setContentView(R.layout.activity_main);
+                        defElements();
+                        longClicked=false;
+                    }
+
                     ColorDrawable viewColor = (ColorDrawable) textViews[finalI1].getBackground();
                     int colorId = viewColor.getColor();
                     getDetails(textViews[finalI1],colorId);
@@ -98,20 +116,20 @@ public class MainActivity extends AppCompatActivity {
             });
 
 
+
+
         }
-
-
-
     }
 
     public void getReactions(TextView txt) {
-
         final Animation pulse = AnimationUtils.loadAnimation(this, R.anim.pulse);
-        setContentView(R.layout.activity_main);
         final String symbol = txt.getText().toString().split("\n")[1];
         final int number = Integer.parseInt( txt.getText().toString().split("\n")[0]);
 
 
+         final ProgressDialog Dialog = new ProgressDialog(MainActivity.this);
+        Dialog.setMessage("Loading...");
+        Dialog.show();
         mDatabase.addValueEventListener(new ValueEventListener() {
             TextView txtView= (TextView) findViewById(allElements.get(number));
 
@@ -121,22 +139,6 @@ public class MainActivity extends AppCompatActivity {
 
                 if (rw.equals("0")){
                     Toast.makeText(getApplicationContext(),"No elements can react with " + symbol,Toast.LENGTH_LONG).show();
-                }else if (rw.length()==1){
-                    reactionWith.add(Integer.parseInt(rw));
-                    a:
-                    for(int i =0; i<allElements.size(); i++){
-                        for (int j=0; j<reactionWith.size();j++) {
-                            if ((i == reactionWith.get(j) - 1)) {
-                                txtView = (TextView) findViewById(allElements.get(i));
-                                txtView.startAnimation(pulse);
-                                continue a;
-                            }else if (i==number-1){
-                                continue a;
-                            }
-                        }
-                        txtView= (TextView) findViewById(allElements.get(i));
-                        txtView.setBackgroundColor(getResources().getColor(R.color.numBack));
-                    }
                 }else {
                     String[] RW = rw.split(",");
 
@@ -156,10 +158,11 @@ public class MainActivity extends AppCompatActivity {
                         }
                         txtView= (TextView) findViewById(allElements.get(i));
                         txtView.setBackgroundColor(getResources().getColor(R.color.numBack));
+                        txtView.setTextColor(Color.GRAY);
                     }
                 }
                 reactionWith.clear();
-
+                Dialog.hide();
             }
             @Override
             public void onCancelled(DatabaseError error) {
@@ -167,12 +170,13 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-//        Toast.makeText(getApplicationContext(),rw, Toast.LENGTH_SHORT).show();
+
 
 
     }
 
     public  void getDetails(TextView element, int colorID){
+
         String symbol = element.getText().toString().split("\n")[1];
 
 
@@ -214,6 +218,8 @@ public class MainActivity extends AppCompatActivity {
 
     public void outSide(View view) {
         setContentView(R.layout.activity_main);
+        defElements();
+
         details.setVisibility(View.GONE);
 
     }
@@ -221,6 +227,8 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public void onBackPressed() {
         setContentView(R.layout.activity_main);
+        defElements();
+
         details.setVisibility(View.GONE);
 
     }
