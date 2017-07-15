@@ -482,6 +482,7 @@ public class MainActivity extends AppCompatActivity {
 
         details.setVisibility(View.GONE);
 
+
     }
 
     @Override
